@@ -11,14 +11,34 @@ jobs:
       - name: checkout
         uses: actions/checkout@v3
 
-      - name: setup nodejs env
-        uses: actions/setup-node@v3
+      - name: Cache node modules
+        id: cache-npm
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-node-modules
         with:
-          node-version: '16.17.1'
-      - name: build
-        run: |
-          npm i
-          npm run build
+          # npm cache files are stored in `~/.npm` on Linux/macOS
+          path: ~/.npm
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
+
+        - if: ${{ steps.cache-npm.outputs.cache-hit != 'true' }}
+          name: List the state of node modules
+          continue-on-error: true
+          run: npm list
+
+        - name: Install dependencies
+          run: npm install
+
+        - name: Build
+          run: npm run build
+        - name: Test
+          run: npm test
+
+     
 
       - name: Deploy file to Server
         uses: easingthemes/ssh-deploy@v4.1.8
@@ -32,7 +52,7 @@ jobs:
           # Remote port
           REMOTE_PORT: ${{secrets.REMOTE_PORT}} # optional, default is 22
           # Source directory, path relative to `$GITHUB_WORKSPACE` root, eg: `dist/`
-          SOURCE: './build/*' # optional, default is 
+          SOURCE: './dist/*' # optional, default is 
           # Target directory
           TARGET: ${{secrets.REMOTE_TARGET}} # optional, default is 
           # Arguments to pass to rsync
