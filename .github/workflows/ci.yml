@@ -34,6 +34,6 @@ jobs:
           # Source directory, path relative to `$GITHUB_WORKSPACE` root, eg: `dist/`
           SOURCE: './build/*' # optional, default is 
           # Target directory
-          TARGET: '/temp' # optional, default is 
+          TARGET: ${{secrets.REMOTE_TARGET}} # optional, default is 
           # Arguments to pass to rsync
           ARGS: '-rlgoDzvc' # optional, default is -rlgoDzvc -i
