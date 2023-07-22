@@ -15,17 +15,26 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '16.17.1'
-          
+          cache: 'npm'
       - name: build
         run: |
-          npm install
+          npm ci
           npm run build
 
       - name: Deploy file to Server
-        uses: wlixcc/SFTP-Deploy-Action@v1.0
+        uses: easingthemes/ssh-deploy@v4.1.8
         with:
-          username: 'root'
-          server: ${{ secrets.SERVER_IP }}
-          ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }}
-          local_path: './build/*'
-          remote_path: '/play/temp'
+          # Private key part of an SSH key pair
+          SSH_PRIVATE_KEY: ${{secrets.SSH_PRIVATE_KEY}}
+          # Remote host
+          REMOTE_HOST: ${{secrets.SERVER_IP}}
+          # Remote user
+          REMOTE_USER: ${{secrets.REMOTE_USER}}
+          # Remote port
+          REMOTE_PORT: ${{secrets.REMOTE_PORT}} # optional, default is 22
+          # Source directory, path relative to `$GITHUB_WORKSPACE` root, eg: `dist/`
+          SOURCE: './build/*' # optional, default is 
+          # Target directory
+          TARGET: '/temp' # optional, default is 
+          # Arguments to pass to rsync
+          ARGS: '-rlgoDzvc' # optional, default is -rlgoDzvc -i
